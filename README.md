@@ -22,3 +22,7 @@ Issues on the VFAT Partition were killing our hosts, so to catch it I wrote this
 
 A massive set of scripts and functions I used in an enterprise Auto Deploy project.
 For anyone wanting to use PowerCLI to manage or update Host Profiles at scale, this is really helpful as it goes to the API, and Host Profiles have no real management capabilities by default through PowerCLI.
+
+- Get-VMCloudConfig.ps1
+
+A bit of a crossover with vRA 8. I used this function a lot to debug inputs on Cloud Assembly blueprints in vSphere.
