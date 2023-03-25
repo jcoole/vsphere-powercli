@@ -1,4 +1,4 @@
-# vSphere PowerCLI scripts
+# vSphere PowerCLI scripts repo
 
 Last updated **3/24/2023**
 
