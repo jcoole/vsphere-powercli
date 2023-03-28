@@ -7,7 +7,6 @@ This function is a cross-platform bridge/wrapper between vSphere PowerCLI and Op
 
 .PARAMETER VMHost
 The ESXi Host to generate the SSL Certificate for.
-If the -FQDN parameter is passed, that value overrides the below checks.
 
 Since the certificate CN/SAN is based on the FQDN, several checks are done.
 
@@ -19,16 +18,9 @@ Since a proper DNS A/PTR record is required for ESXi and this functionality to w
 
 .PARAMETER Hostname
 The VMHost's "hostname" to use for the Certificate Signing Request.
-Overrides any derived values.
 
 .PARAMETER Domain
 The DNS Domain to append to the VMHost hostname value. 
-Overrides any derived values.
-
-.PARAMETER ConfigFile
-Path to the OpenSSL Configuration file (typically 'openssl.cfg') that is used to generate the certificates.
-If you are creating your own, ensure that you reference the VMware KB 2015387 for the proper template and values.
-If not specified, will check for 'openssl.cfg' or 'openssl.conf' in the current working directory.
 
 .PARAMETER Country
 The Country the host resides in. Maps to the 'countryName' field in the request configuration.
