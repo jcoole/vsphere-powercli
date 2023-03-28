@@ -1,9 +1,12 @@
 <#
 .SYNOPSIS
-Generates one or more ESXi Host SSL Signing Requests and their respective keys.
+Generates one or more ESXi Host SSL Signing Requests and their respective keys using OpenSSL.
 
 .DESCRIPTION
 This function is a cross-platform bridge/wrapper between vSphere PowerCLI and OpenSSL to generate Certificate Signing Requests for ESXi hosts.
+Ensure that your platform has OpenSSL installed and referencable using "Get-Command".
+For Windows, this means that the directory with OpenSSL binaries is either in the current directory, as an alias, or is in the $env:PATH variable.
+For Mac/Linux, this just means that 'which openssl' is successful.
 
 .PARAMETER VMHost
 The ESXi Host to generate the SSL Certificate for.
@@ -44,8 +47,9 @@ $CSR = New-EsxiCertificate -VMHost $MyHost -Path "C:\Temp"
 
 Generates SSL Request and Key for the host "esx001.domain.local" and places the output in "C:\Temp"
 .OUTPUTS
-Folder containing the CSR and Private Key for further processing
+The CSR for further processing by your Certificate Authority
 .NOTES
+This function is designed for Powershell Core 7.2+
 This function requires the VMware.PowerCLI module (any version) to work.
 #>
 function New-ESXiCertificate {
@@ -119,7 +123,8 @@ function New-ESXiCertificate {
         Write-Host "New-EsxiCertificate :: Confirming a compatible OpenSSL version is present on the system ... " -ForegroundColor Cyan -NoNewline
         $OpenSSLPath = (Get-Command openssl -ErrorAction Stop).Path
         # Version
-        [Version]$OpenSSLVersion = (Invoke-Expression -Command "$($OpenSSLPath) version").Split(" ")[1]
+        [Version]$OpenSSLVersion = (& $OpenSSLPath version).Split(" ")[1]
+        
         # Test the version for >= 0.9.8
         [Version]$MinVersion = '0.9.8'
         if($OpenSSLVersion -ge $MinVersion) {
@@ -223,15 +228,14 @@ commonName = $_hostfqdn
     # Output the template file for OpenSSL to use
     $Template | Out-File -FilePath $TemplateFilePath -Encoding ascii    
     # Use OpenSSL binary to generate CSR and Private Key
-    $CSRCommand = "$OpenSSLPath req -new -nodes -out `"$CSRPath`" -keyout `"$RuiKeyOrigPath`" -config `"$TemplateFilePath`" 2>&1"
-    $RSACommand = "$OpenSSLPath rsa -in `"$RuiKeyOrigPath`" -out `"$RuiKeyPath`" 2>&1"
-    Write-Host "New-EsxiCertificate :: Generating CSR and Private Key for [$_hostfqdn]..." -ForegroundColor Cyan -NoNewline
-    $cmd_csr = Invoke-Expression -Command $CSRCommand
-    $cmd_rsa = Invoke-Expression -Command $RSACommand
-
-    Write-Host "success!" -ForegroundColor Green
+    $CSRArgs = @("req","-new","-nodes","-out",$CSRPath,"-keyout",$RuiKeyOrigPath,"-config",$TemplateFilePath)
+    $RSAArgs = @("rsa","-in",$RuiKeyOrigPath,"-out",$RuiKeyPath)
+    Write-Host "New-EsxiCertificate :: Generating CSR and RSA Private Key for [$_hostfqdn]..." -ForegroundColor Cyan
+    $CSRCommand = & $OpenSSLPath $CSRArgs
+    $RSACommand = & $OpenSSLPath $RSAArgs
+    Write-Host "New-EsxiCertificate :: Creation successful!" -ForegroundColor Green
     Write-Host "New-EsxiCertificate :: Certificate request output found in" -ForegroundColor Cyan -NoNewline
     Write-Host " [$outputdir]" -ForegroundColor Yellow
-
-    return $OutputDir
+    $CSR = Get-Content $CSRPath -Raw
+    return $CSR
 }
